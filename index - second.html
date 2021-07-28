@@ -1,0 +1,333 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+<script src="d3-annotate.js"></script>
+<style> 
+circle {fill: lightblue; stroke: black;} 
+div.tooltip {
+  color: white;
+  position: absolute;
+  text-align: center;
+  width: 150px;
+  height: 68px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: rgba(0,0,0,.8);
+  border: 2px solid black;
+  pointer-events: none;
+}
+a {
+  text-decoration: none;
+  display: inline-block;
+  padding: 8px 16px;
+}
+
+a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.previous {
+  background-color: #f1f1f1;
+  color: black;
+}
+
+.next {
+  background-color: #04AA6D;
+  color: white;
+}
+
+.round {
+  border-radius: 50%;
+}
+</style>
+<body onload='init()'>
+    <div class="container">
+		<div class="row">
+			<div class="column">
+				<h2>
+					Insights into the Fuel Efficiency of Cars
+				  </h2>		  
+			</div>
+			<div class="column">
+				<h3>
+					Scene 2/5: Performance of Difference Fuels				  
+				</h3>				
+			</div>
+			<div class="column">
+				<h4>
+					<a href="index.html" class="previous">&laquo; Previous</a>
+					<a href="index - third.html" class="next">Next &raquo;</a> 					  
+				</h4>
+			</div>
+        </div>
+		<div class="row">
+			<h4>If you are debating between gasoline and electric cars, here is some reference for you. 
+				With color coding to highlight fuel type groups, we can see that the electric cars perform much better than other cars in fuel efficiency (not surprising). 
+				If you are still only interested in gasoline cars, like I am, Mitsubishi and Lexus have the top performance and are worth checking out.</h4>
+		</div>
+	</div>    
+<script>
+  async function init() {
+	function render(dataset){
+
+				d3.select("svg").remove();
+				//create svg element
+				var svg = d3.select("body")
+								.append("svg")
+								.attr("width", w)
+								.attr("height", h);		
+				//scale function
+				//X city MPG
+				// var xScale = d3.scaleLinear()
+				var xScale = d3.scaleLog()
+					// .domain([10, d3.max(dataset, function(d) { return d[0]; })])
+					.domain([10, 150])
+					.range([padding, w - padding * 2])
+
+				//Y hwy MPG
+				// var yScale = d3.scaleLinear()
+				var yScale = d3.scaleLog()
+					// .domain([10, d3.max(dataset, function(d) { return d[1]; })])
+					.domain([10, 150])
+					.range([h - padding, padding])
+				
+				var tivaluesForAxis = [10,20,50,100];
+				// var xAxis = d3.axisBottom().scale(xScale).ticks(10);
+				var xAxis = d3.axisBottom(xScale).tickValues(tivaluesForAxis).tickFormat(d3.format("~s"));
+				
+				// var yAxis = d3.axisLeft().scale(yScale).ticks(10);
+				var yAxis = d3.axisLeft(yScale).tickValues(tivaluesForAxis).tickFormat(d3.format("~s"));
+				
+				// Color scale: give me a specie name, I return a color
+				var color = d3.scaleOrdinal()
+					.domain(["Gasoline", "Diesel", "Electricity" ])
+					.range([ "yellow", "orange", "blue"])
+					
+
+
+				svg.selectAll("circle")
+					.data(dataset)
+					.enter()
+					.append("circle")
+					.attr("cx", function(d) {
+						return xScale(d[0]);
+					})
+					.attr("cy", function(d) {
+						return yScale(d[1]);
+					})
+					.attr("r", function(d){
+						return 2 + d[2];
+					})
+					.style("fill", function (d) { return color(d[4]) } )
+					// .on('mouseover', d => {
+					// 	div
+					// 		.transition()
+					// 		.duration(200)
+					// 		.style('opacity', 0.9);
+					// 	div
+					// 		.html('City: ' + d[0] + '<br/> Hwy: ' + d[1] + '<br/> Maker: ' + d[3] + '<br/> Fule: ' + d[4] + '<br/> Cyl: ' + d[5])
+					// 		.style('left', d3.event.pageX + 'px')
+					// 		.style('top', d3.event.pageY - 28 + 'px');
+					// 	})
+					// .on("mouseover", function(d) {
+					// 	debugger;
+					// 	d3.select(this).style("fill", color(d[4]));
+					// 	})     					
+					// .on('mouseout', () => {
+					// 	div
+					// 		.transition()
+					// 		.duration(500)
+					// 		.style('opacity', 0);
+					// 	})
+					// .on("mouseover", highlight)
+   					// .on("mouseleave", doNotHighlight )
+					;
+					
+				//x axis
+				svg.append("g")
+					.attr("class", "x axis")	
+					.attr("transform", "translate(0," + (h - padding) + ")")
+					.call(xAxis);
+				
+				svg.append("text")             
+					.attr("transform", "translate(" + w/2 +"," + (h - 10) + ")")
+					.style("text-anchor", "middle")
+					.text("City MPG");
+
+				//y axis
+				svg.append("g")
+					.attr("class", "y axis")	
+					.attr("transform", "translate(" + padding + ", 0)")
+					.call(yAxis);       				
+				svg.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("y", 0 )
+					.attr("x",0 - (h / 2))
+					.attr("dy", "1em")
+					.style("text-anchor", "middle")
+					.text("HWY MPG");  		
+
+				// Define the div for the tooltip
+				const div = d3.select('body')
+							.append('div')
+							.attr('class', 'tooltip')
+							.style('opacity', 0);					
+			
+				// Handmade legend
+				svg.append("circle").attr("cx",700).attr("cy",250).attr("r", 6).style("fill", "yellow")
+				svg.append("circle").attr("cx",700).attr("cy",280).attr("r", 6).style("fill", "orange")
+				svg.append("circle").attr("cx",700).attr("cy",310).attr("r", 6).style("fill", "blue")
+				svg.append("text").attr("x", 720).attr("y", 250).text("Gasoline").style("font-size", "15px").attr("alignment-baseline","middle")
+				svg.append("text").attr("x", 720).attr("y", 280).text("Diesel").style("font-size", "15px").attr("alignment-baseline","middle")
+				svg.append("text").attr("x", 720).attr("y", 310).text("Electricity").style("font-size", "15px").attr("alignment-baseline","middle")
+
+
+				///// for annotation
+				const annotations = [
+				{
+				note: {
+					label: "Lexus Gasoline with CityMPG of 39, HWYMPG of 36",
+					title: "Gasoline Car with best city MPG",
+					wrap: 150,
+				//	align: "left"
+				},
+				connector: {
+					end: "arrow" ,// 'dot' also available
+					type: "curve"
+				},
+				x: 390,
+				y: 310,
+				dy: 40,
+				dx: 42
+				}
+				,{
+				note: {
+					label: "Mitsubishi Gasoline with CityMPG of 35, HWYMPG of 42",
+					title: "Gasoline Car with best HWY MPG",
+					wrap: 150
+				},
+				connector: {
+					end: "arrow",
+					type: "curve",
+					//can also add a curve type, e.g. curve: d3.curveStep
+					// points: [[200, 200],[290, 152]]
+				},
+				x: 355,	
+				y: 275,
+				dy: -80,
+				dx: -70
+				} ,
+				{
+					note: { title: "Electric Cars", 
+					lineType:"none", 
+					orientation: "leftRight", 
+					"align": "middle" },
+					className: "anomaly",
+					type: d3.annotationCalloutCircle,
+					subject: { radius: 95 },
+					x: 630,
+					y: 100,
+					dx: -105,
+					dy: 30
+				}				
+				/* ,{
+				//below in makeAnnotations has type set to d3.annotationLabel
+				//can add this type value below to override that default
+				type: d3.annotationCalloutCircle,
+				note: {
+					label: "A different annotation type",
+					title: "d3.annotationCalloutCircle",
+					wrap: 190
+				},
+				//settings for the subject, in this case the circle radius
+				subject: {
+					radius: 50
+				},
+				x: 620,
+				y: 150,
+				dy: 137,
+				dx: 102
+				} */
+			].map(function(d){ d.color = "#E8336D"; return d})
+
+				const makeAnnotations = d3.annotation()
+				.type(d3.annotationLabel)
+				.annotations(annotations)
+
+
+				svg.append("g")
+			    .call(makeAnnotations)			
+  
+	}
+	function getCSVdata(dataset, makerIndicator = null, fuelIndicator = null) {
+            d3.dsv(",","https://flunky.github.io/cars2017.csv", function(d) {
+                return {
+                    Maker : d.Make,
+                    Fuel: d.Fuel,
+                    Engine: d.EngineCylinders,
+                    mpg: { 
+                        highwayMPG  : d.AverageHighwayMPG,
+                        cityMPG  : d.AverageCityMPG
+                    }
+                };
+            }).then(function(data) {
+			//   debugger;
+				if((makerIndicator == null | makerIndicator == "allMaker") & (fuelIndicator == null | fuelIndicator == "allFuel")){
+					for (var i = 0; i < data.length; i++) {
+							dataset.push([parseInt(data[i].mpg.cityMPG), parseInt(data[i].mpg.highwayMPG), parseInt(data[i].Engine), data[i].Maker, data[i].Fuel, data[i].Engine]);
+					}
+				}
+				else if (makerIndicator != null & (fuelIndicator == null | fuelIndicator == "allFuel")){
+					for (var i = 0; i < data.length; i++) {
+						if(makerIndicator == data[i].Maker)
+							dataset.push([parseInt(data[i].mpg.cityMPG), parseInt(data[i].mpg.highwayMPG), parseInt(data[i].Engine), data[i].Maker, data[i].Fuel, data[i].Engine]);
+					}
+				}
+				else if ((makerIndicator == null | makerIndicator == "allMaker") & fuelIndicator != null){
+					for (var i = 0; i < data.length; i++) {
+						if(fuelIndicator == data[i].Fuel)
+							dataset.push([parseInt(data[i].mpg.cityMPG), parseInt(data[i].mpg.highwayMPG), parseInt(data[i].Engine), data[i].Maker, data[i].Fuel, data[i].Engine]);
+					}
+				}
+				else
+				{
+					for (var i = 0; i < data.length; i++) {
+						if(makerIndicator == data[i].Maker & fuelIndicator == data[i].Fuel)
+							dataset.push([parseInt(data[i].mpg.cityMPG), parseInt(data[i].mpg.highwayMPG), parseInt(data[i].Engine), data[i].Maker, data[i].Fuel, data[i].Engine]);
+					}
+				}
+				// debugger;
+				render(dataset);
+			}); 				
+		}
+			
+
+
+		//width and height
+		var w = 800;
+		var h = 600;
+		var padding = 40;
+
+
+		        
+		var dataset = [];
+        getCSVdata(dataset, null, null);
+		
+		//Add in event listener for indicator choice.
+		$("#indicatorChoice").on("change", function () {
+			debugger;
+			let dataset = [];
+			getCSVdata(dataset, $("#indicatorChoice").val(), $("#fueltypeChoice").val())
+		});		
+		//Add in event listener for indicator choice.
+		$("#fueltypeChoice").on("change", function () {
+			debugger;
+			let dataset = [];
+			getCSVdata(dataset, $("#indicatorChoice").val(), $("#fueltypeChoice").val())
+		});			
+
+	}
+    </script>
+</body>
+</html>

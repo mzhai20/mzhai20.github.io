@@ -1,0 +1,329 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+<script src="d3-annotate.js"></script>
+<style> 
+circle {fill: lightblue; stroke: black;} 
+div.tooltip {
+  color: white;
+  position: absolute;
+  text-align: center;
+  width: 150px;
+  height: 68px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: rgba(0,0,0,.8);
+  border: 2px solid black;
+  pointer-events: none;
+}
+a {
+  text-decoration: none;
+  display: inline-block;
+  padding: 8px 16px;
+}
+
+a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.previous {
+  background-color: #f1f1f1;
+  color: black;
+}
+
+.next {
+  background-color: #04AA6D;
+  color: white;
+}
+
+.round {
+  border-radius: 50%;
+}
+</style>
+<body onload='init()'>
+    <div class="container">
+		<div class="row">
+			<div class="column">
+				<h2>
+					Insights into the Fuel Efficiency of Cars
+				  </h2>		
+			</div>
+			<div class="column">
+				<h3>
+					Scene 5/5: About Fuel Efficiency – What Do You Want to Know?				  
+				</h3>				
+			</div>
+			<div class="column">
+				<h4>
+					<a href="index - fourth.html" class="previous">&laquo; Previous</a>
+				</h4>
+			</div>
+        </div>
+		<div class="row">
+			<h4>What do you want to find out about fuel efficiency? Is there a certain manufacturer or a certain type of fuel you are interested in? If so, you can use the filter feature below. 
+				
+				</h4>
+		</div>
+		<div class="row">
+			<h4>Filter by Manufacturer 
+				<select id = "indicatorChoice" input="dropdown">
+				  <option value="allMaker">All Manufacturers</option>
+				  <option value="Acura">Acura</option>
+				  <option value="Alfa Romeo">Alfa Romeo</option>
+				  <option value="Aston Martin">Aston Martin</option>
+				  <option value="Audi">Audi</option>
+				  <option value="Bentley">Bentley</option>
+				  <option value="BMW">BMW</option>
+				  <option value="Buick">Buick</option>
+				  <option value="Cadillac">Cadillac</option>
+				  <option value="Chevrolet">Chevrolet</option>
+				  <option value="Chrysler">Chrysler</option>
+				  <option value="Dodge">Dodge</option>
+				  <option value="Ferrari">Ferrari</option>
+				  <option value="Fiat">Fiat</option>
+				  <option value="Ford">Ford</option>
+				  <option value="Genesis">Genesis</option>
+				  <option value="GMC">GMC</option>
+				  <option value="Honda">Honda</option>
+				  <option value="Hyundai">Hyundai</option>
+				  <option value="Infiniti">Infiniti</option>
+				  <option value="Jaguar">Jaguar</option>
+				  <option value="Jeep">Jeep</option>
+				  <option value="Kia">Kia</option>
+				  <option value="Lamborghini">Lamborghini</option>
+				  <option value="Land Rover">Land Rover</option>
+				  <option value="Lexus">Lexus</option>
+				  <option value="Lincoln">Lincoln</option>
+				  <option value="Lotus">Lotus</option>
+				  <option value="Maserati">Maserati</option>
+				  <option value="Mazda">Mazda</option>
+				  <option value="McLaren Automotive">McLaren Automotive</option>
+				  <option value="Mercedes-Benz">Mercedes-Benz</option>
+				  <option value="MINI">MINI</option>
+				  <option value="Mitsubishi">Mitsubishi</option>
+				  <option value="Nissan">Nissan</option>
+				  <option value="Porsche">Porsche</option>
+				  <option value="Ram">Ram</option>
+				  <option value="Rolls-Royce">Rolls-Royce</option>
+				  <option value="Roush Performance">Roush Performance</option>
+				  <option value="smart">smart</option>
+				  <option value="Subaru">Subaru</option>
+				  <option value="Tesla">Tesla</option>
+				  <option value="Toyota">Toyota</option>
+				  <option value="Volkswagen">Volkswagen</option>
+				  <option value="Volvo">Volvo</option>
+			  </select> Filter by Fuel
+			  <select id ="fueltypeChoice" input="dropdown">
+				<option value="allFuel">All Fuels</option>
+				<option value="Gasoline">Gasoline</option>
+				<option value="Diesel">Diesel</option>
+				<option value="Electricity">Electricity</option>
+			  </select>
+			  </h4>
+			  <div class="row">
+				<h4>You can also move your mouse over any data point (the little bubble) in the chart, a pop-up will show you information of that car including its manufacturer, fuel type, cylinder, and city and highway MPG. Enjoy!
+					</h4>
+			</div>				    
+		</div>
+	</div>  	
+<script>
+  async function init() {
+	function render(dataset){
+
+				d3.select("svg").remove();
+				//create svg element
+				var svg = d3.select("body")
+								.append("svg")
+								.attr("width", w)
+								.attr("height", h);		
+				//scale function
+				//X city MPG
+				// var xScale = d3.scaleLinear()
+				var xScale = d3.scaleLog()
+					// .domain([10, d3.max(dataset, function(d) { return d[0]; })])
+					.domain([10, 150])
+					.range([padding, w - padding * 2])
+
+				//Y hwy MPG
+				// var yScale = d3.scaleLinear()
+				var yScale = d3.scaleLog()
+					// .domain([10, d3.max(dataset, function(d) { return d[1]; })])
+					.domain([10, 150])
+					.range([h - padding, padding])
+				
+				var tivaluesForAxis = [10,20,50,100];
+				// var xAxis = d3.axisBottom().scale(xScale).ticks(10);
+				var xAxis = d3.axisBottom(xScale).tickValues(tivaluesForAxis).tickFormat(d3.format("~s"));
+				
+				// var yAxis = d3.axisLeft().scale(yScale).ticks(10);
+				var yAxis = d3.axisLeft(yScale).tickValues(tivaluesForAxis).tickFormat(d3.format("~s"));
+				
+				// Color scale: give me a specie name, I return a color
+				var color = d3.scaleOrdinal()
+					.domain(["Gasoline", "Diesel", "Electricity" ])
+					.range([ "yellow", "orange", "blue"])
+					
+
+
+				svg.selectAll("circle")
+					.data(dataset)
+					.enter()
+					.append("circle")
+					.attr("cx", function(d) {
+						return xScale(d[0]);
+					})
+					.attr("cy", function(d) {
+						return yScale(d[1]);
+					})
+					.attr("r", function(d){
+						return 2 + d[2];
+					})
+					.style("fill", function (d) { return color(d[4]) } )
+					.on('mouseover', d => {
+						div
+							.transition()
+							.duration(200)
+							.style('opacity', 0.9);
+						div
+							.html('Manufacturer: ' + d[3] + '<br/> Fule: ' + d[4] + '<br/> Cyl: ' + d[5] + '<br/> City MPG: ' + d[0] + '<br/> Hwy MPG: ' + d[1])
+							.style('left', d3.event.pageX + 'px')
+							.style('top', d3.event.pageY - 28 + 'px');
+						})
+					// .on("mouseover", function(d) {
+					// 	debugger;
+					// 	d3.select(this).style("fill", color(d[4]));
+					// 	})     					
+					.on('mouseout', () => {
+						div
+							.transition()
+							.duration(500)
+							.style('opacity', 0);
+						})
+					// .on("mouseover", highlight)
+   					// .on("mouseleave", doNotHighlight )
+					;
+					
+				//x axis
+				svg.append("g")
+					.attr("class", "x axis")	
+					.attr("transform", "translate(0," + (h - padding) + ")")
+					.call(xAxis);
+				
+				svg.append("text")             
+					.attr("transform", "translate(" + w/2 +"," + (h - 10) + ")")
+					.style("text-anchor", "middle")
+					.text("City MPG");
+
+				//y axis
+				svg.append("g")
+					.attr("class", "y axis")	
+					.attr("transform", "translate(" + padding + ", 0)")
+					.call(yAxis);       				
+				svg.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("y", 0 )
+					.attr("x",0 - (h / 2))
+					.attr("dy", "1em")
+					.style("text-anchor", "middle")
+					.text("HWY MPG");  		
+
+				// Define the div for the tooltip
+				const div = d3.select('body')
+							.append('div')
+							.attr('class', 'tooltip')
+							.style('opacity', 0);					
+			
+				// Handmade legend
+				svg.append("circle").attr("cx",700).attr("cy",250).attr("r", 6).style("fill", "yellow")
+				svg.append("circle").attr("cx",700).attr("cy",280).attr("r", 6).style("fill", "orange")
+				svg.append("circle").attr("cx",700).attr("cy",310).attr("r", 6).style("fill", "blue")
+				svg.append("text").attr("x", 720).attr("y", 250).text("Gasoline").style("font-size", "15px").attr("alignment-baseline","middle")
+				svg.append("text").attr("x", 720).attr("y", 280).text("Diesel").style("font-size", "15px").attr("alignment-baseline","middle")
+				svg.append("text").attr("x", 720).attr("y", 310).text("Electricity").style("font-size", "15px").attr("alignment-baseline","middle")
+
+
+				///// for annotation
+				const annotations = [
+			].map(function(d){ d.color = "#E8336D"; return d})
+
+				const makeAnnotations = d3.annotation()
+				.type(d3.annotationLabel)
+				.annotations(annotations)
+
+
+				svg.append("g")
+			    .call(makeAnnotations)			
+  
+	}
+	function getCSVdata(dataset, makerIndicator = null, fuelIndicator = null) {
+            d3.dsv(",","https://flunky.github.io/cars2017.csv", function(d) {
+                return {
+                    Maker : d.Make,
+                    Fuel: d.Fuel,
+                    Engine: d.EngineCylinders,
+                    mpg: { 
+                        highwayMPG  : d.AverageHighwayMPG,
+                        cityMPG  : d.AverageCityMPG
+                    }
+                };
+            }).then(function(data) {
+			//   debugger;
+				if((makerIndicator == null | makerIndicator == "allMaker") & (fuelIndicator == null | fuelIndicator == "allFuel")){
+					for (var i = 0; i < data.length; i++) {
+							dataset.push([parseInt(data[i].mpg.cityMPG), parseInt(data[i].mpg.highwayMPG), parseInt(data[i].Engine), data[i].Maker, data[i].Fuel, data[i].Engine]);
+					}
+				}
+				else if (makerIndicator != null & (fuelIndicator == null | fuelIndicator == "allFuel")){
+					for (var i = 0; i < data.length; i++) {
+						if(makerIndicator == data[i].Maker)
+							dataset.push([parseInt(data[i].mpg.cityMPG), parseInt(data[i].mpg.highwayMPG), parseInt(data[i].Engine), data[i].Maker, data[i].Fuel, data[i].Engine]);
+					}
+				}
+				else if ((makerIndicator == null | makerIndicator == "allMaker") & fuelIndicator != null){
+					for (var i = 0; i < data.length; i++) {
+						if(fuelIndicator == data[i].Fuel)
+							dataset.push([parseInt(data[i].mpg.cityMPG), parseInt(data[i].mpg.highwayMPG), parseInt(data[i].Engine), data[i].Maker, data[i].Fuel, data[i].Engine]);
+					}
+				}
+				else
+				{
+					for (var i = 0; i < data.length; i++) {
+						if(makerIndicator == data[i].Maker & fuelIndicator == data[i].Fuel)
+							dataset.push([parseInt(data[i].mpg.cityMPG), parseInt(data[i].mpg.highwayMPG), parseInt(data[i].Engine), data[i].Maker, data[i].Fuel, data[i].Engine]);
+					}
+				}
+				// debugger;
+				render(dataset);
+			}); 				
+		}
+			
+
+
+		//width and height
+		var w = 800;
+		var h = 600;
+		var padding = 40;
+
+
+		        
+		var dataset = [];
+        getCSVdata(dataset, null, null);
+		
+		//Add in event listener for indicator choice.
+		$("#indicatorChoice").on("change", function () {
+			debugger;
+			let dataset = [];
+			getCSVdata(dataset, $("#indicatorChoice").val(), $("#fueltypeChoice").val())
+		});		
+		//Add in event listener for indicator choice.
+		$("#fueltypeChoice").on("change", function () {
+			debugger;
+			let dataset = [];
+			getCSVdata(dataset, $("#indicatorChoice").val(), $("#fueltypeChoice").val())
+		});			
+
+	}
+    </script>
+</body>
+</html>
